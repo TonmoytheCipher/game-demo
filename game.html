@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2D Spaceship Shooting Game</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+            background-color: #000;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="gameCanvas"></canvas>
+
+<script>
+// Get the canvas and its context
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+// Set canvas size to the full window size
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+// Define player object
+const player = {
+    x: canvas.width / 2,
+    y: canvas.height - 100,
+    width: 50,
+    height: 50,
+    speed: 5,
+    dx: 0,
+    dy: 0
+};
+
+// Define bullet object
+const bullets = [];
+const bulletSpeed = 6;
+
+// Define enemy object
+const enemies = [];
+const enemySpeed = 2;
+
+// Listen for keyboard events to move player
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft' || e.key === 'a') {
+        player.dx = -player.speed;
+    } else if (e.key === 'ArrowRight' || e.key === 'd') {
+        player.dx = player.speed;
+    } else if (e.key === ' ') {
+        shootBullet();
+    }
+});
+
+document.addEventListener('keyup', (e) => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'a' || e.key === 'd') {
+        player.dx = 0;
+    }
+});
+
+// Load images for the player and enemies
+const playerImg = new Image();
+const enemyImg = new Image();
+
+// Track image loading
+let imagesLoaded = 0;
+
+// Function to check when images are loaded
+function checkImagesLoaded() {
+    imagesLoaded++;
+    if (imagesLoaded === 2) {
+        // Start the game loop after both images are loaded
+        gameLoop();
+    }
+}
+
+// Set images when they are loaded
+playerImg.onload = checkImagesLoaded;
+enemyImg.onload = checkImagesLoaded;
+
+playerImg.src = 'sir.jpg';  // Replace with correct relative path or URL
+enemyImg.src = 'mes.jpg';  // Replace with correct relative path or URL
+
+// Define a function to move the player
+function movePlayer() {
+    player.x += player.dx;
+
+    // Prevent player from going out of bounds
+    if (player.x < 0) player.x = 0;
+    if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+}
+
+// Define a function to draw the player
+function drawPlayer() {
+    ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
+}
+
+// Define a function to shoot bullets
+function shootBullet() {
+    const bullet = {
+        x: player.x + player.width / 2 - 5,
+        y: player.y,
+        width: 10,
+        height: 20,
+        dy: -bulletSpeed
+    };
+    bullets.push(bullet);
+}
+
+// Define a function to move bullets
+function moveBullets() {
+    for (let i = 0; i < bullets.length; i++) {
+        bullets[i].y += bullets[i].dy;
+
+        // Remove bullets that go off-screen
+        if (bullets[i].y < 0) {
+            bullets.splice(i, 1);
+            i--;
+        }
+    }
+}
+
+// Define a function to draw bullets
+function drawBullets() {
+    for (let i = 0; i < bullets.length; i++) {
+        ctx.fillStyle = 'red';
+        ctx.fillRect(bullets[i].x, bullets[i].y, bullets[i].width, bullets[i].height);
+    }
+}
+
+// Define a function to create enemies
+function createEnemy() {
+    const enemy = {
+        x: Math.random() * (canvas.width - 50),
+        y: -50,
+        width: 50,
+        height: 50,
+        dy: enemySpeed
+    };
+    enemies.push(enemy);
+}
+
+// Define a function to move enemies
+function moveEnemies() {
+    for (let i = 0; i < enemies.length; i++) {
+        enemies[i].y += enemies[i].dy;
+
+        // Remove enemies that go off-screen
+        if (enemies[i].y > canvas.height) {
+            enemies.splice(i, 1);
+            i--;
+        }
+    }
+}
+
+// Define a function to draw enemies
+function drawEnemies() {
+    for (let i = 0; i < enemies.length; i++) {
+        ctx.drawImage(enemyImg, enemies[i].x, enemies[i].y, enemies[i].width, enemies[i].height);
+    }
+}
+
+// Define a function to detect bullet collisions with enemies
+function detectCollisions() {
+    for (let i = 0; i < bullets.length; i++) {
+        for (let j = 0; j < enemies.length; j++) {
+            if (bullets[i].x < enemies[j].x + enemies[j].width &&
+                bullets[i].x + bullets[i].width > enemies[j].x &&
+                bullets[i].y < enemies[j].y + enemies[j].height &&
+                bullets[i].y + bullets[i].height > enemies[j].y) {
+                // Bullet hit enemy, remove both
+                bullets.splice(i, 1);
+                enemies.splice(j, 1);
+                i--;
+                break;
+            }
+        }
+    }
+}
+
+// Define the game loop function
+function gameLoop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    movePlayer();
+    moveBullets();
+    moveEnemies();
+    detectCollisions();
+
+    drawPlayer();
+    drawBullets();
+    drawEnemies();
+
+    requestAnimationFrame(gameLoop);
+}
+
+// Set an interval to create enemies
+setInterval(createEnemy, 1500); // Create an enemy every 1.5 seconds
+
+// Handle window resizing
+window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+});
+
+</script>
+
+</body>
+</html>
